@@ -1,2 +1,4 @@
 langchain_mcp_adapters
 langchain-gigachat
+langgraph[rich]
+selenium
