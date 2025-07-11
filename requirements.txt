@@ -1,4 +1,7 @@
 langchain_mcp_adapters
 langchain-gigachat
 langgraph[rich]
-selenium
+selenium~=4.33.0
+pydantic~=2.11.7
+mcp~=1.10.0
+pydantic
