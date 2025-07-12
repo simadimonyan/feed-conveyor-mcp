@@ -13,7 +13,7 @@ class WebTools:
 
         web.tool(
             name="mcp_search",
-            description="Ищет 5 первых ссылок в Google",
+            description="Ищет 5 первых ссылок в Google. Нельзя указывать в запросе больше 5 слов",
         ) (self.search)
 
     @staticmethod
