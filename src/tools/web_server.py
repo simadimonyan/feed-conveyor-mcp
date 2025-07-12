@@ -26,6 +26,9 @@ class WebTools:
 
             service = Service()
             options = webdriver.FirefoxOptions()
+            options.add_argument("--headless")
+            options.add_argument("--disable-dev-shm-usage")
+            options.add_argument("--no-sandbox")
             driver = webdriver.Firefox(service=service, options=options)
 
             driver.get("https://www.google.com")
@@ -51,7 +54,8 @@ class WebTools:
                 print("\n")
                 print(results)
                 print("\n")
-                driver.quit()
+
+            driver.quit()
 
         except Exception as e:
             print("\n")
