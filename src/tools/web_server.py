@@ -1,3 +1,4 @@
+from langchain_community.tools import DuckDuckGoSearchResults
 from mcp.server import FastMCP
 from selenium import webdriver
 from selenium.webdriver import Keys
@@ -19,43 +20,45 @@ class WebTools:
     @staticmethod
     def search(query: str) -> list[dict[str, str | None]]:
         """Search last 5 links on query"""
-
         results = []
 
         try:
 
-            service = Service()
-            options = webdriver.FirefoxOptions()
-            options.add_argument("--headless")
-            options.add_argument("--disable-dev-shm-usage")
-            options.add_argument("--no-sandbox")
-            driver = webdriver.Firefox(service=service, options=options)
+            search = DuckDuckGoSearchResults(output_format="list")
+            return search.invoke(query)
 
-            driver.get("https://www.google.com")
-
-            search_input = WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.NAME, "q"))
-            )
-
-            search_input.clear()
-            search_input.send_keys(query + Keys.RETURN)
-
-            WebDriverWait(driver, 10).until(
-                EC.presence_of_all_elements_located((By.CSS_SELECTOR, "h3"))
-            )
-
-            elems = driver.find_elements(By.CSS_SELECTOR, "h3")[:5]
-            for elem in elems:
-                parent = elem.find_element(By.XPATH, "..")
-                results.append({
-                    "title": elem.text,
-                    "href": parent.get_attribute("href")
-                })
-                print("\n")
-                print(results)
-                print("\n")
-
-            driver.quit()
+            # service = Service()
+            # options = webdriver.FirefoxOptions()
+            # options.add_argument("--headless")
+            # options.add_argument("--disable-dev-shm-usage")
+            # options.add_argument("--no-sandbox")
+            # driver = webdriver.Firefox(service=service, options=options)
+            #
+            # driver.get("https://www.google.com")
+            #
+            # search_input = WebDriverWait(driver, 10).until(
+            #     EC.presence_of_element_located((By.NAME, "q"))
+            # )
+            #
+            # search_input.clear()
+            # search_input.send_keys(query + Keys.RETURN)
+            #
+            # WebDriverWait(driver, 10).until(
+            #     EC.presence_of_all_elements_located((By.CSS_SELECTOR, "h3"))
+            # )
+            #
+            # elems = driver.find_elements(By.CSS_SELECTOR, "h3")[:5]
+            # for elem in elems:
+            #     parent = elem.find_element(By.XPATH, "..")
+            #     results.append({
+            #         "title": elem.text,
+            #         "href": parent.get_attribute("href")
+            #     })
+            #     print("\n")
+            #     print(results)
+            #     print("\n")
+            #
+            # driver.quit()
 
         except Exception as e:
             print("\n")
