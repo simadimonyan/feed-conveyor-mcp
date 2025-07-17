@@ -1,9 +1,12 @@
 langchain_mcp_adapters
 langchain-gigachat
 langgraph[rich]
-selenium~=4.33.0
+selenium
 pydantic~=2.11.7
-mcp~=1.10.0
+mcp
 pydantic
-duckduckgo-search
+ddgs
 langchain-community
+requests
+beautifulsoup4
+langchain-core

@@ -1,11 +1,13 @@
+import time
+from typing import Any
+
+import requests
+from bs4 import BeautifulSoup
 from langchain_community.tools import DuckDuckGoSearchResults
 from mcp.server import FastMCP
-from selenium import webdriver
-from selenium.webdriver import Keys
-from selenium.webdriver.firefox.service import Service
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.wait import WebDriverWait
+
+from src.domain.state import Trends, News, Content
+
 
 class WebTools:
 
@@ -14,55 +16,61 @@ class WebTools:
 
         web.tool(
             name="mcp_search",
-            description="Ищет 5 первых ссылок в Google. Нельзя указывать в запросе больше 5 слов",
+            description="""
+             Чтобы использовать инструмент необходимо - сгенерировать поисковые запросы для DuckDuckGo, чтобы найти самую свежую и актуальную
+             информацию о целевой аудитории для создания поста в Telegram. Каждый запрос должен быть конкретным, своевременным,
+             направленным на выявление тенденций, новостей или обсуждений, связанных с интересами, поведением или потребностями аудитории.
+             Язык запроса должен соответствовать запросам целевой аудитории.
+    
+             Вот параметры для выполнения задачи:
+             • Цель: собрать информацию о тенденциях или новостях, которые могут послужить основой для публикации, ориентированной на данную аудиторию.
+             • Желаемые типы контента:
+             • Последние новости или разработки.
+             • Тенденции в сфере интересов аудитории.
+             • Распространенные вопросы или обсуждения, происходящие в Интернете.
+             • Инновационные идеи или продукты, ориентированные на аудиторию.
+             
+             В аргумент items инстпумента поиска запросы прописываются через \\n списком из 3-х элементов открытого текста, без цифр, таких как (1. 2.), или чего-либо еще, не связанного с запросом - ПРОСТО открытым ТЕКСТОМ в нижнем регистре.
+             НЕ ВВОДИТЕ "Вот поисковые запросы для DuckDuckGo:" или что-то в этом роде
+            
+             Пример:
+             запрос1 \\n запрос2 \\n запрос3
+         """,
         ) (self.search)
 
     @staticmethod
-    def search(query: str) -> list[dict[str, str | None]]:
-        """Search last 5 links on query"""
-        results = []
+    def search(target_audience: str, items: str) -> dict | list[Any]:
+        state = []
 
         try:
-
             search = DuckDuckGoSearchResults(output_format="list")
-            return search.invoke(query)
+            lines_array = items.splitlines()
+            news_trends = []
 
-            # service = Service()
-            # options = webdriver.FirefoxOptions()
-            # options.add_argument("--headless")
-            # options.add_argument("--disable-dev-shm-usage")
-            # options.add_argument("--no-sandbox")
-            # driver = webdriver.Firefox(service=service, options=options)
-            #
-            # driver.get("https://www.google.com")
-            #
-            # search_input = WebDriverWait(driver, 10).until(
-            #     EC.presence_of_element_located((By.NAME, "q"))
-            # )
-            #
-            # search_input.clear()
-            # search_input.send_keys(query + Keys.RETURN)
-            #
-            # WebDriverWait(driver, 10).until(
-            #     EC.presence_of_all_elements_located((By.CSS_SELECTOR, "h3"))
-            # )
-            #
-            # elems = driver.find_elements(By.CSS_SELECTOR, "h3")[:5]
-            # for elem in elems:
-            #     parent = elem.find_element(By.XPATH, "..")
-            #     results.append({
-            #         "title": elem.text,
-            #         "href": parent.get_attribute("href")
-            #     })
-            #     print("\n")
-            #     print(results)
-            #     print("\n")
-            #
-            # driver.quit()
+            for item in lines_array:
+                webs = search.invoke(item)
+
+                for web in webs:
+                    try:
+                        response = requests.get(web["link"])
+                        soup = BeautifulSoup(response.text, 'html.parser')
+                        text = ""
+                        for post in soup.find_all('p'):
+                            text += post.get_text()
+
+                        news = News(title=web["title"], text=text, link=web["link"], date=str(time.ctime(time.time())))
+                        news_trends.append(news)
+                    except:
+                        continue
+
+            trends = Trends(trends=news_trends)
+            content = Content(target_audience=target_audience, analytics=[trends])
+
+            return content
 
         except Exception as e:
             print("\n")
             print(e)
             print("\n")
 
-        return results
+        return state
