@@ -44,7 +44,7 @@ class WebTools:
 
         try:
             search = DuckDuckGoSearchResults(output_format="list")
-            lines_array = items.splitlines()
+            lines_array = items.split(" \n ")
             news_trends = []
 
             for item in lines_array:

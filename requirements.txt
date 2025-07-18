@@ -6,6 +6,7 @@ pydantic~=2.11.7
 mcp
 pydantic
 ddgs
+duckduckgo-search
 langchain-community
 requests
 beautifulsoup4
