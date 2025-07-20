@@ -15,53 +15,42 @@ class WebTools:
         self.web = web
 
         web.tool(
-            name="mcp_search",
+            name="mcp_web_parse",
             description="""
-             Чтобы использовать инструмент необходимо - сгенерировать поисковые запросы для DuckDuckGo, чтобы найти самую свежую и актуальную
-             информацию о целевой аудитории для создания поста в Telegram. Каждый запрос должен быть конкретным, своевременным,
-             направленным на выявление тенденций, новостей или обсуждений, связанных с интересами, поведением или потребностями аудитории.
-             Язык запроса должен соответствовать запросам целевой аудитории.
-    
-             Вот параметры для выполнения задачи:
-             • Цель: собрать информацию о тенденциях или новостях, которые могут послужить основой для публикации, ориентированной на данную аудиторию.
-             • Желаемые типы контента:
-             • Последние новости или разработки.
-             • Тенденции в сфере интересов аудитории.
-             • Распространенные вопросы или обсуждения, происходящие в Интернете.
-             • Инновационные идеи или продукты, ориентированные на аудиторию.
-             
-             В аргумент items инстпумента поиска запросы прописываются через \\n списком из 3-х элементов открытого текста, без цифр, таких как (1. 2.), или чего-либо еще, не связанного с запросом - ПРОСТО открытым ТЕКСТОМ в нижнем регистре.
-             НЕ ВВОДИТЕ "Вот поисковые запросы для DuckDuckGo:" или что-то в этом роде
+             Чтобы использовать инструмент необходимо - передать источники для парсинга
+
+             В аргумент items инструмента веб парсинга источники прописываются через |AND| списком из 3-х элементов открытого текста, без цифр, таких как (1. 2.), или чего-либо еще, не связанного с запросом - ПРОСТО открытым ТЕКСТОМ в нижнем регистре.
+             Между ссылками обязательно должны быть пробелы "  |AND|  "
             
              Пример:
-             запрос1 \\n запрос2 \\n запрос3
+             https://test1.com  |AND|  https://test2.com  |AND|  https://test3.com
          """,
-        ) (self.search)
+        ) (self.parse)
 
     @staticmethod
-    def search(target_audience: str, items: str) -> dict | list[Any]:
+    def parse(target_audience: str, items: str) -> dict | list[Any]:
         state = []
 
         try:
-            search = DuckDuckGoSearchResults(output_format="list")
-            lines_array = items.split(" \n ")
+            # search = DuckDuckGoSearchResults(output_format="list")
+            lines_array = items.strip().split("|AND|")
             news_trends = []
+            #
+            # for item in lines_array:
+            #     webs = search.invoke(item)
 
-            for item in lines_array:
-                webs = search.invoke(item)
+            for web in lines_array:
+                try:
+                    response = requests.get(web.strip()) #["link"]
+                    soup = BeautifulSoup(response.text, 'html.parser')
+                    text = ""
+                    for post in soup.find_all('p'):
+                        text += post.get_text()
 
-                for web in webs:
-                    try:
-                        response = requests.get(web["link"])
-                        soup = BeautifulSoup(response.text, 'html.parser')
-                        text = ""
-                        for post in soup.find_all('p'):
-                            text += post.get_text()
-
-                        news = News(title=web["title"], text=text, link=web["link"], date=str(time.ctime(time.time())))
-                        news_trends.append(news)
-                    except:
-                        continue
+                    news = News(title="", text=text, link=web, date=str(time.ctime(time.time())))
+                    news_trends.append(news)
+                except:
+                    continue
 
             trends = Trends(trends=news_trends)
             content = Content(target_audience=target_audience, analytics=[trends])
